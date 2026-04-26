@@ -5,6 +5,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 import requests
 from html import escape
 import re
+import io
+import zipfile
+
 
 st.set_page_config(
     page_title="MovieDate",
@@ -26,10 +29,19 @@ TMDB_API_KEY = "d5f9a81215e04dfff4585e9c6267d7dd"   # مثال: "xxxxxxxxxxxxxxx
 # =========================
 @st.cache_data
 def load_data():
-    movies = pd.read_csv("movies.csv")
-    ratings = pd.read_csv("ratings.csv")
-    links = pd.read_csv("links.csv")
+    data_url = "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+
+    response = requests.get(data_url, timeout=30)
+    response.raise_for_status()
+
+    zip_file = zipfile.ZipFile(io.BytesIO(response.content))
+
+    movies = pd.read_csv(zip_file.open("ml-latest-small/movies.csv"))
+    ratings = pd.read_csv(zip_file.open("ml-latest-small/ratings.csv"))
+    links = pd.read_csv(zip_file.open("ml-latest-small/links.csv"))
+
     return movies, ratings, links
+
 
 movies, ratings, links = load_data()
 
